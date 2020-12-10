@@ -8,11 +8,13 @@ public class LoopSubdivision
 {
     private static Vector3[] iVertices;
     private static int[] iFaces;
+    private static Vector2[] iUVs; 
     private static Vertex[] mVertices;
     private static Dictionary<string, Edge> EdgesDic;
     private static Dictionary<string, int> Map_Edge_Vertex;
     private static Dictionary<string, List<EdgeVertex>> Map_Pos_EdgeVertex;
     private static string edgekey = "{0}_{1}";
+    private static bool hasUvs =false;
 
     private static Dictionary<string, List<int>> PointMap;
     private static string Vector2String(Vector3 v)
@@ -53,6 +55,10 @@ public class LoopSubdivision
     {
         iVertices = mesh.vertices;
         iFaces = mesh.triangles;
+        iUVs = mesh.uv;//只判断一组UV,如果有多组UV就再加
+        if(iUVs.Length>0)
+            hasUvs = true;
+
         /******************************************************
 		 *
 		 * Step 0: 
@@ -159,28 +165,44 @@ public class LoopSubdivision
         *******************************************************/
         int sl = newSourceVertices.Length;
         Vector3[] newVertices = newSourceVertices.Concat(newEdgeVertices).ToArray<Vector3>();
+        Vector2[] newUVs = new Vector2[newVertices.Length];
         int[] newTriangles = new int[iFaces.Length * 4];
         for (int i = 0, l = iFaces.Length; i < l; i += 3)
         {
             int va = iFaces[i];
             int vb = iFaces[i + 1];
             int vc = iFaces[i + 2];
-
+            
             // find the 3 new edges vertex of each old face
 
             int v1 = Map_Edge_Vertex[GetEdgeKey(va, vb)] + sl;
             int v2 = Map_Edge_Vertex[GetEdgeKey(vb, vc)] + sl;
             int v3 = Map_Edge_Vertex[GetEdgeKey(vc, va)] + sl;
+          
 
             // create 4 faces.
             NewFace(newTriangles, i * 4, v1, v2, v3);
             NewFace(newTriangles, i * 4 + 3, va, v1, v3);
             NewFace(newTriangles, i * 4 + 6, vb, v2, v1);
             NewFace(newTriangles, i * 4 + 9, vc, v3, v2);
+               if ( hasUvs ) {
+            newUVs[va] = iUVs[va];
+            newUVs[vb] = iUVs[vb];
+            newUVs[vc] = iUVs[vc];
+            newUVs[v1] = new Vector2((iUVs[va].x+iUVs[vb].x)*0.5f,(iUVs[va].y+iUVs[vb].y)*0.5f);
+            newUVs[v2] = new Vector2((iUVs[vb].x+iUVs[vc].x)*0.5f,(iUVs[vb].y+iUVs[vc].y)*0.5f);
+            newUVs[v3] = new Vector2((iUVs[vc].x+iUVs[va].x)*0.5f,(iUVs[vc].y+iUVs[va].y)*0.5f);
+             }
         }
+        
         // Overwrite old arrays
         mesh.vertices = newVertices;
         mesh.triangles = newTriangles;
+         if ( hasUvs ) {
+             mesh.uv =newUVs;
+         }
+         
+
         mesh.SetIndices(newTriangles, MeshTopology.Triangles, 0);
         //if ( hasUvs ) geometry.faceVertexUvs = newUVs;
         mesh.RecalculateNormals();
@@ -197,7 +219,6 @@ public class LoopSubdivision
         {// if length is not 2, handle condition
             edgeVertexWeight = 0.5f;
             adjacentVertexWeight = 0;
-            Debug.Log(n);
             if (n != 1)
             {
                 // console.warn( 'Subdivision Modifier: Number of connected faces != 2, is: ', connectedFaces, currentEdge );
