@@ -78,25 +78,8 @@ public class LoopSubdivision
         {
             Edge currentEdge = e.Value;
             Vector3 newEdgeVertex = Vector3.zero;
-            // int connectedFaces = currentEdge.adjVertex.Count;
-            // SetWeight1(connectedFaces);
-            // newEdgeVertex += ((iVertices[currentEdge.a] + iVertices[currentEdge.b]) * edgeVertexWeight);
-
-            // Vector3 tmp = Vector3.zero;
-            // for (int j = 0; j < connectedFaces; j++)
-            // {
-            //     int v = currentEdge.adjVertex[j];
-            //     tmp += iVertices[v];
-            // }//边两旁的两个顶点。如果边的两边都是面，则权重为1/8，如果位于边界处，权重为0
-            // newEdgeVertex += (tmp * adjacentVertexWeight);
             newEdgeVertex = iVertices[currentEdge.a]+iVertices[currentEdge.b];
             Map_Edge_Vertex[e.Key] = index;//记录的是新顶点的标号
-
-             // for (int j = 0; j < connectedFaces; j++)
-            // {
-            //     int v = currentEdge.adjVertex[j];
-            //     tmp += iVertices[v];
-            // }//边两旁的两个顶点。如果边的两边都是面，则权重为1/8，如果位于边界处，权重为0
 
             string vstr = Vector2String(newEdgeVertex);
              if (!Map_Pos_EdgeVertex.ContainsKey(vstr))
@@ -104,7 +87,6 @@ public class LoopSubdivision
                 Map_Pos_EdgeVertex.Add(vstr, new List<EdgeVertex>());
             }
             Map_Pos_EdgeVertex[vstr].Add(new EdgeVertex(index,currentEdge));
-                                                        //currentEdge.edgeVertex = newEdgeVertices.Count;
 
             newEdgeVertices[index++] = newEdgeVertex;
         }
